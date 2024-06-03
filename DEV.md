@@ -64,3 +64,16 @@ class RoleControllerTest extends TestCase
 
 }
 ```
+
+## Add API with Passport
+
+```bash
+php artisan install:api --passport
+
+php artisan passport:keys
+
+php artisan vendor:publish --tag=passport-config
+
+php artisan make:controller Auth/AuthController --test
+
+```
