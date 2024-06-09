@@ -8,37 +8,31 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
-use App\Crud\CrudService;
-use App\Crud\HasCrudService;
-use App\Http\Requests\StoreRoleRequest;
-use App\Http\Requests\UpdateRoleRequest;
+use App\Crud\CrudController;
+use App\Http\Requests\RoleRequest;
 use App\Http\Resources\RoleResource;
 
-class RoleController extends Controller
+class RoleController extends CrudController
 {
-    use HasCrudService;
-
-    public function __construct(protected CrudService $service)
-    {
-        $this->service->setModel(Role::class)
-            ->setStoreRequest(StoreRoleRequest::class)
-            ->setUpdateRequest(UpdateRoleRequest::class)
-            ->setResource(RoleResource::class);
-            // setCollection(RoleCollection::class);
-    }
-
+    protected $model = Role::class;
+    protected $storeRequest = RoleRequest::class;
+    protected $updateRequest = RoleRequest::class;
+    protected $resource = RoleResource::class;
+    
+    
 }
 
 ```
 
 ## Add CrudServiceTesting
+
 ```php
-use App\Crud\HasCrudServiceTest;
+use App\Crud\HasCrudControllerTest;
 use Tests\TestCase;
 
 class RoleControllerTest extends TestCase
 {
-    use HasCrudServiceTest;
+    use HasCrudControllerTest;
 
     protected string $route = '/api/roles';
 
@@ -75,5 +69,43 @@ php artisan passport:keys
 php artisan vendor:publish --tag=passport-config
 
 php artisan make:controller Auth/AuthController --test
+
+```
+
+## Role Permission
+
+```bash
+php artisan make:model Role -mf
+php artisan make:model Permission -mf
+
+php artisan make:seeder UserRolePermissionSeeder
+php artisan make:test UserRolePermissionTest --unit
+
+php artisan make:request RoleRequest
+php artisan make:resource RoleResource
+
+php artisan make:request PermissionRequest
+php artisan make:resource PermissionResource
+
+php artisan make:controller Api/RoleController --test
+php artisan make:controller Api/PermissionController --test
+
+php artisan make:migration create_role_permissions_table
+php artisan make:migration create_user_roles_table
+php artisan make:migration create_user_permissions_table
+
+php artisan make:request UserRequest
+php artisan make:resource UserResource
+php artisan make:controller Api/UserController --test
+
+```
+
+```bash
+php artisan migrate:fresh --env=testing
+
+php artisan passport:client --password --no-interaction --env=testing
+php artisan passport:client --personal --no-interaction --env=testing
+
+php artisan tinker --env=testing
 
 ```

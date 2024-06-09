@@ -15,7 +15,8 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         if (static::$login) {
-            $user = User::saveByName('admin');
+//            $user = User::saveByName('admin');
+            $user = User::factory()->create();
             $this->actingAs($user, 'api');
             $this->createPassportClients();
         }

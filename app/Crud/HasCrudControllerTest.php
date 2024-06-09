@@ -2,13 +2,8 @@
 
 namespace App\Crud;
 
-//use Illuminate\Foundation\Testing\RefreshDatabase;
-//use Laravel\Passport\ClientRepository;
-
 trait HasCrudControllerTest
 {
-//    use RefreshDatabase;
-
     protected static bool $running = false;
     protected int $idOk = 1;
     protected int $idFail = 9999;
@@ -17,18 +12,12 @@ trait HasCrudControllerTest
 //        $this->withoutMiddleware();
 
         if (!static::$running) {
+            static::$running = true;
             $this->artisan('migrate:fresh');
-
-            if (config('app.debug')) {
-                dump(config('app.env') . ' ' . config('database.default'));
-            }
-
 //            $url = config('app.url');
 //            $clientRepository = new ClientRepository();
 //            $clientRepository->createPasswordGrantClient(null, 'Test Password Grant Client', $url);
 //            $clientRepository->createPersonalAccessClient(null, 'Test Personal Access Client', $url);
-
-            static::$running = true;
         }
     }
 

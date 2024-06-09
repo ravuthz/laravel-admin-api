@@ -64,4 +64,40 @@ class User extends Authenticatable
     {
         return Hash::check($password, $this->password);
     }
+
+    public function permissions()
+    {
+        return $this->belongsToMany(
+            Permission::class,
+            'user_permissions',
+            'user_id',
+            'permission_id'
+        );
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(
+            Role::class,
+            'user_roles',
+            'user_id',
+            'role_id'
+        );
+    }
+
+    public static function saveByName($name)
+    {
+        $lowerName = strtolower($name);
+
+        return static::updateOrCreate(
+            [
+                'name' => $lowerName,
+                'email' => $lowerName . '@gmail.com',
+            ],
+            [
+                'password' => '123123',
+                'email_verified_at' => now()
+            ]
+        );
+    }
 }
