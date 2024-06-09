@@ -3,22 +3,12 @@
 namespace Tests\Feature\Http\Controllers\Auth;
 
 use App\Models\User;
-use App\Services\AuthService;
 use Laravel\Passport\Client;
 use Tests\TestCase;
 
 class AuthControllerTest extends TestCase
 {
-    private function createUser($username, $password = '123123')
-    {
-        return User::updateOrCreate([
-            'name' => $username,
-            'email' => $username . '@gm.com'
-        ], [
-            'password' => $password,
-            'email_verified_at' => now()
-        ]);
-    }
+    protected static bool $login = false;
 
     public function test_register()
     {
@@ -43,6 +33,15 @@ class AuthControllerTest extends TestCase
             ]);
     }
 
+    private function loginByName($name)
+    {
+        $user = User::saveByName($name);
+        return $this->postJson(route('auth.login'), [
+            'email' => $user->email,
+            'password' => '123123'
+        ]);
+    }
+
     /**
      * Test user login API.
      *
@@ -50,13 +49,7 @@ class AuthControllerTest extends TestCase
      */
     public function test_login()
     {
-        $user = $this->createUser('admin1');
-
-        $input = (array) $user->only('email');
-        $input['password'] = '123123';
-
-        $res = $this->postJson(route('auth.login'), $input);
-
+        $res = $this->loginByName('admin1');
         $res->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [
@@ -79,27 +72,28 @@ class AuthControllerTest extends TestCase
      */
     public function test_logout()
     {
-        $auth = AuthService::login(User::factory()->create());
+        $auth = $this->loginByName('admin2')->json('data');
 
-        $this->withHeaders([
-            'Authorization' => $auth['token_type'] . ' ' . $auth['access_token'],
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json'
-        ]);
+//        $this->withHeaders([
+//            'Accept' => 'application/json',
+//            'Content-Type' => 'application/json',
+//            'Authorization' => $auth['token_type'] . ' ' . $auth['access_token'],
+//        ])->get();
 
-        $res = $this->getJson(route('auth.logout'));
+        $res = $this
+            ->withToken($auth['access_token'], $auth['token_type'])
+            ->getJson(route('auth.logout'));
 
         $res->assertStatus(200)
-            ->assertJsonStructure([
-                'message'
-            ])
             ->assertJson([
+                'success' => true,
                 'message' => 'Successfully logged out',
             ]);
     }
 
-    private function requestToken($user, $password = null)
+    private function requestToken()
     {
+        $user = User::factory()->create();
         $client = Client::where('password_client', true)->first();
 
         return $this->postJson('/oauth/token', [
@@ -107,39 +101,36 @@ class AuthControllerTest extends TestCase
             'client_id' => $client->id,
             'client_secret' => $client->secret,
             'username' => $user->email,
-            'password' => $password ?? '123123',
+            'password' => '123123',
             'scope' => ''
         ]);
     }
 
     public function test_request_token()
     {
-        $user = $this->createUser('admin2');
-        $res = $this->requestToken($user);
+        $res = $this->requestToken();
 
         $res->assertJsonStructure([
-            'token_type', 'expires_in', 'access_token'
+            'token_type', 'expires_in', 'access_token', 'refresh_token'
         ]);
     }
 
     public function test_refresh_token()
     {
-        $client = Client::where('password_client', true)->first();
+        $token = $this->requestToken();
 
-        $user = $this->createUser('admin2');
-        $res1 = $this->requestToken($user);
+        $client = Client::where('password_client', true)->first();
 
         $res = $this->postJson('/oauth/token', [
             'grant_type' => 'refresh_token',
             'client_id' => $client->id,
             'client_secret' => $client->secret,
-            'refresh_token' => $res1->json('refresh_token'),
+            'refresh_token' => $token->json('refresh_token'),
             'scope' => ''
         ]);
 
-        $res->assertJsonStructure([
-            'token_type', 'expires_in', 'access_token'
+        $res->assertStatus(200)->assertJsonStructure([
+            'token_type', 'expires_in', 'access_token', 'refresh_token'
         ]);
     }
-
 }

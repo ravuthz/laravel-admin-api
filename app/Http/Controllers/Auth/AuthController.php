@@ -29,17 +29,19 @@ class AuthController extends Controller
             'password' => 'required|string|min:6|max:50',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        if (!Auth::guard('web')->attempt($credentials)) {
             return response()->error(null, 401, 'Unauthorized');
         }
 
-        $data = AuthService::login($request->user(), $request->remember_me);
+        // remember_token
+        $user = Auth::user(); // $request->user()
+        $data = AuthService::login($user, $request->remember_me);
         return response()->success($data, 200, 'Successfully logged in');
     }
 
-    public function logout(Request $request)
+    public function logout()
     {
-        AuthService::logout($request);
+        AuthService::logout();
         return response()->success([], 200, 'Successfully logged out');
     }
 

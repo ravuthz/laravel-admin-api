@@ -3,18 +3,17 @@
 namespace App\Services;
 
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 
 class AuthService
 {
-    public static function login($user, $rememberMe = false)
+    public static function login($user, $rememberMe = false): array
     {
         $result = $user->createToken('Personal Access Token');
 
         $token = $result->token;
 
         if ($rememberMe) {
-            $token->expires_at = Carbon::now()->addWeeks(1);
+            $token->expires_at = now()->addWeeks(1);
         }
 
         $token->save();
@@ -26,8 +25,10 @@ class AuthService
         ];
     }
 
-    public static function logout(Request $request)
+    public static function logout()
     {
-        return $request->user()->token()->revoke();
+//        request()->user()->tokens->map(fn ($token) => $token->revoke());
+        request()->user()?->token()?->revoke();
+        auth('web')->logout();
     }
 }
