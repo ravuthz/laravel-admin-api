@@ -8,23 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class CrudService
 {
     private Model|null $model;
-    private string|null $resource;
-    private string|null $collection;
-    private string|null $storeRequest;
-    private string|null $updateRequest;
+    private $beforeSaveFn = null;
+    private $afterSaveFn = null;
 
-    public function __construct(
-        $model = null,
-        $storeRequest = null,
-        $updateRequest = null,
-        $resource = null,
-        $collection = null)
+    public function __construct($model = null)
     {
         $this->model = $model ? app($model) : null;
-        $this->resource = $resource;
-        $this->collection = $collection ?? $resource;
-        $this->storeRequest = $storeRequest;
-        $this->updateRequest = $updateRequest;
     }
 
     public function setModel($model): static
@@ -43,59 +32,6 @@ class CrudService
             throw new Exception("The model is required", 400);
         }
         return $this->model;
-    }
-
-    public function setStoreRequest($request): static
-    {
-        $this->storeRequest = $request;
-        return $this;
-    }
-
-    public function setUpdateRequest($request): static
-    {
-        $this->updateRequest = $request;
-        return $this;
-    }
-
-    public function setResource($resource): static
-    {
-        $this->resource = $resource;
-        return $this;
-    }
-
-    public function setCollection($collection): static
-    {
-        $this->collection = $collection;
-        return $this;
-    }
-
-    public function responseList($data, $status = null, $message = null)
-    {
-        if ($this->collection) {
-            $data = $this->collection::make($data);
-        }
-        if ($this->resource) {
-            $data = $this->resource::collection($data);
-        }
-        return $this->responseJson($data, $status, $message);
-    }
-
-    public function responseItem($data, $status = null, $message = null)
-    {
-        if ($this->resource) {
-            $data = $this->resource::make($data);
-        }
-        return $this->responseJson($data, $status, $message);
-    }
-
-    public function responseJson($data, $status = null, $message = null)
-    {
-        $status = $status ?? 200;
-        return response()->json([
-            'data' => $data ?? [],
-            'status' => $status,
-            'message' => $message ?? 'Successfully'
-        ], $status);
     }
 
     /**
@@ -123,50 +59,44 @@ class CrudService
     /**
      * @throws Exception
      */
-    public function list($request)
-    {
-        $data = $this->findAll($request);
-        return $this->responseList($data);
-    }
-
-    /**
-     * @throws Exception
-     */
-    public function show(string $id)
-    {
-        $data = $this->findOne($id);
-        return $this->responseItem($data);
-    }
-
-    /**
-     * @throws Exception
-     */
     public function delete(string $id)
     {
         $this->findOne($id)->delete();
-        return $this->responseItem(null);
+        return null;
     }
 
     /**
      * @throws Exception
      */
-    public function save($request, string $id = null, callable $beforeSaveFn = null)
+    public function save($request, string $id = null)
     {
-        if ($id == null) {
-            $model = $this->getModel();
-            $input = $this->storeRequest ? app($this->storeRequest)->validated() : $request->all();
-        } else {
-            $model = $this->findOne($id);
-            $input = $this->updateRequest ? app($this->updateRequest)->validated() : $request->all();
-        }
-
-        if (is_callable($beforeSaveFn)) {
-            $beforeSaveFn($model, $input);
-        }
+        $input = $request->all();
+        $model = $id ? $this->findOne($id) : $this->getModel();
 
         $model->fill($input);
+
+        if (is_callable($this->beforeSaveFn)) {
+            call_user_func($this->beforeSaveFn, $request, $model, $id);
+        }
+
         $model->save();
 
-        return $this->responseItem($model, 200, 'Saved');
+        if (is_callable($this->afterSaveFn)) {
+            call_user_func($this->afterSaveFn, $request, $model, $id);
+        }
+
+        return $model;
+    }
+
+    public function setBeforeSave(callable $callbackFn): static
+    {
+        $this->beforeSaveFn = $callbackFn;
+        return $this;
+    }
+
+    public function setAfterSave(callable $callbackFn): static
+    {
+        $this->afterSaveFn = $callbackFn;
+        return $this;
     }
 }
