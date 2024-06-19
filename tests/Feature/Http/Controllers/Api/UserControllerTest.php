@@ -26,7 +26,7 @@ class UserControllerTest extends TestCase
 
         if (!empty($id)) {
             return [
-                'name' => 'Test Name',
+                'username' => 'UserUpdated',
                 'email' => 'test@gm' . $time . '.com',
                 'password' => '123123',
                 'roles' => [$role],
@@ -35,7 +35,7 @@ class UserControllerTest extends TestCase
         }
 
         return [
-            'name' => 'Test Role Created',
+            'username' => 'UserCreated',
             'email' => 'test@gm' . $time . '.com',
             'password' => '123123',
             'roles' => [$role],

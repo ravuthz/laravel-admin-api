@@ -10,6 +10,12 @@ class AuthControllerTest extends TestCase
 {
     protected static bool $login = false;
 
+    public function setUp(): void
+    {
+        parent::setUp();
+//        $this->artisan('migrate:fresh');
+    }
+
     public function test_register()
     {
         $input = User::factory()->make()->toArray();
@@ -35,6 +41,8 @@ class AuthControllerTest extends TestCase
 
     private function loginByName($name)
     {
+        $this->createPassportClients();
+
         $user = User::saveByName($name);
         return $this->postJson(route('auth.login'), [
             'email' => $user->email,
@@ -50,6 +58,7 @@ class AuthControllerTest extends TestCase
     public function test_login()
     {
         $res = $this->loginByName('admin1');
+
         $res->assertStatus(200)
             ->assertJsonStructure([
                 'data' => [

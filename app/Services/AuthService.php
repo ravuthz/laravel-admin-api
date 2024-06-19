@@ -9,7 +9,6 @@ class AuthService
     public static function login($user, $rememberMe = false): array
     {
         $result = $user->createToken('Personal Access Token');
-
         $token = $result->token;
 
         if ($rememberMe) {

@@ -19,9 +19,11 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
         'email',
+        'username',
         'password',
+        'first_name',
+        'last_name'
     ];
 
     /**
@@ -53,7 +55,7 @@ class User extends Authenticatable
     public function findForPassport(string $username): User
     {
         return $this->where('email', $username)
-//            ->orWhere('username', $username)
+            ->orWhere('username', $username)
             ->first();
     }
 
@@ -91,7 +93,7 @@ class User extends Authenticatable
 
         return static::updateOrCreate(
             [
-                'name' => $lowerName,
+                'username' => $lowerName,
                 'email' => $lowerName . '@gmail.com',
             ],
             [
