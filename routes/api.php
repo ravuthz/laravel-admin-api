@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\PermissionController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SettingController;
+use App\Http\Controllers\Api\SettingTypeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Http\Request;
@@ -21,5 +23,8 @@ Route::middleware(['auth:api'])->group(function () {
     Route::apiResource('users', UserController::class);
     Route::apiResource('roles', RoleController::class);
     Route::apiResource('permissions', PermissionController::class);
+
+    Route::apiResource('setting-types', SettingTypeController::class);
+    Route::apiResource('settings', SettingController::class);
 });
 

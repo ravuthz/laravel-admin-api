@@ -100,6 +100,7 @@ php artisan make:controller Api/UserController --test
 
 ```
 
+# Create clients
 ```bash
 php artisan migrate:fresh --env=testing
 
@@ -107,5 +108,25 @@ php artisan passport:client --password --no-interaction --env=testing
 php artisan passport:client --personal --no-interaction --env=testing
 
 php artisan tinker --env=testing
+
+```
+
+# Setting
+```bash
+php artisan make:model SettingType -m
+php artisan make:model Setting -m
+
+php artisan make:request SettingTypeRequest
+php artisan make:request SettingRequest
+
+php artisan make:resource SettingTypeResource
+php artisan make:resource SettingResource
+
+php artisan make:seeder SettingSeeder
+
+php artisan migrate:fresh --seed
+
+php artisan make:controller Api/SettingTypeController --test
+php artisan make:controller Api/SettingController --test
 
 ```
