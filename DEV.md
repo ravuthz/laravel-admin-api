@@ -130,3 +130,32 @@ php artisan make:controller Api/SettingTypeController --test
 php artisan make:controller Api/SettingController --test
 
 ```
+
+# CRUD CLI Generator
+```bash
+
+php artisan make:command CrudCommand
+php artisan make:command CrudControllerCommand
+php artisan make:command CrudControllerTestCommand
+
+# Generate Only CRUD Resource Controller API
+php artisan crud:controller Post
+
+# Generate Only CRUD Resource Controller Test API
+php artisan crud:controller-test Post
+
+# Generate CRUD Resource Controller API with/without Test
+php artisan crud:generate Post --test
+
+# After generate CRUD Resource Controller API
+# Add route resource apiResource('posts', 'PostController');
+# Update the migration file
+# Update the model add guarded
+# Update the request authorize and rules
+# Update resource to custom response ( optional )
+# Update payload in test controller  ( optional )
+# Update controller before and after save ( optional )
+
+php artisan test --filter='Post'
+
+```
