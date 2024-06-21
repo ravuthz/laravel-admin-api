@@ -130,3 +130,17 @@ php artisan make:controller Api/SettingTypeController --test
 php artisan make:controller Api/SettingController --test
 
 ```
+
+# CRUD CLI Generator
+```bash
+
+php artisan make:command CrudCommand
+php artisan make:command CrudControllerCommand
+php artisan make:command CrudControllerTestCommand
+
+php artisan crud:generate Post --test
+
+php artisan crud:controller Post
+php artisan crud:controller-test Post
+
+```
