@@ -1,9 +1,13 @@
 {
     "private": true,
     "type": "module",
+    "engines": {
+        "node": "18.x"
+    },
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "serve": "php -S localhost:8000 api/index.php"
     },
     "devDependencies": {
         "axios": "^1.6.4",
