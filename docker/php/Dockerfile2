@@ -1,0 +1,46 @@
+FROM php:8.3-fpm
+
+# Install common php extension dependencies
+RUN apt-get update && apt-get install -y \
+#    build-essential \
+#    libfreetype-dev \
+#    libjpeg62-turbo-dev \
+    libpq-dev \
+    libpng-dev \
+    zlib1g-dev \
+    libzip-dev \
+    unzip \
+#    php8.2-pgsql \
+#    php8.2-mysql \
+#    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+#    && docker-php-ext-install -j$(nproc) gd \
+    && docker-php-ext-install zip mbstring exif pcntl bcmath
+#    gd
+
+#RUN docker-php-ext-install pdo pdo_mysql
+
+#pdo_pgsql pgsql
+#pdo_pgsql
+#pdo_mysql
+
+# Set the working directory
+WORKDIR /var/www/
+
+RUN chown -R www-data:www-data /var/www/
+#RUN chmod -R 775 /var/www/storage
+
+RUN ls -lah /var/www
+
+# install composer
+COPY --from=composer:2.6.5 /usr/bin/composer /usr/local/bin/composer
+
+# copy composer.json to workdir & install dependencies
+#COPY composer.json ./
+#RUN composer install --no-dev --optimize-autoloader
+
+EXPOSE 9000
+
+# Set the default command to run php-fpm
+CMD ["php-fpm"]
+
+#ENTRYPOINT ["php", "artisan", "serve", "--host", "0.0.0.0", "--port", "9000"]

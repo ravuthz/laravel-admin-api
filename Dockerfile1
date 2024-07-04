@@ -1,0 +1,41 @@
+FROM ravuthz/php-cli:8.3
+
+ENV NODE_VERISON=20.x
+ENV ROOT_DIRECTORY=/var/www/html
+ENV ROOT_USER_GROUP=www-data:www-data
+
+RUN apt-get update && apt-get install -y nginx supervisor
+
+RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERISON}" | bash -
+RUN apt-get install -y nodejs
+RUN npm install npm@latest -g
+RUN npm install yarn -g
+
+WORKDIR $ROOT_DIRECTORY
+
+COPY . $ROOT_DIRECTORY
+
+RUN chmod +x ./start.sh && ./start.sh
+
+COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
+
+# RUN sed -i "s|root /var/www/public;|root ${ROOT_DIRECTORY}/public;|g" /etc/nginx/sites-available/default \
+#     && if [ -L /etc/nginx/sites-enabled/default ]; then rm /etc/nginx/sites-enabled/default; fi \
+#     && ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+
+RUN <<EOF
+    sed -i "s|root /var/www/public;|root ${ROOT_DIRECTORY}/public;|g" /etc/nginx/sites-available/default
+    if [ -L /etc/nginx/sites-enabled/default ]; then rm /etc/nginx/sites-enabled/default; fi
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+EOF
+
+COPY ./docker/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+
+RUN chown -R $ROOT_USER_GROUP $ROOT_DIRECTORY
+
+EXPOSE 80 443
+
+CMD ["/usr/bin/supervisord", "-n"]
+
+HEALTHCHECK CMD curl --fail http://localhost:9000 || exit 1

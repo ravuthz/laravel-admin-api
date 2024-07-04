@@ -1,0 +1,20 @@
+# Exported from Render on 2024-07-09T08:29:03Z
+services:
+  - type: web
+    name: laravel-admin-api
+    runtime: docker
+    repo: https://github.com/ravuthz/laravel-admin-api
+    plan: free
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_KEY
+        generateValue: true
+      - key: DB_URL
+        fromDatabase:
+          name: pgsql
+          property: connectionString
+    region: singapore
+    dockerContext: .
+    dockerfilePath: ./Dockerfile
+version: "1"

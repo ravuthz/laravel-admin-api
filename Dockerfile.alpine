@@ -1,0 +1,68 @@
+FROM php:8.3-fpm-alpine
+
+ENV TZ=UTC
+ENV APT_PACKAGES="gnupg procps nginx supervisor"
+# iputils  openssh vim git curl
+ENV PHP_EXTENSIONS="zip pdo_mysql pdo_pgsql"
+# pgsql
+
+
+ENV NODE_VERSION=20
+ENV ROOT_DIRECTORY=/var/www/html
+ENV ROOT_USER_GROUP=www-data
+
+ENV COMPOSER_ALLOW_SUPERUSER 1
+ENV COMPOSER_HOME /composer
+ENV PATH $PATH:/composer/vendor/bin
+
+RUN apk update \
+    && apk add --no-cache $APT_PACKAGES \
+    && docker-php-ext-install $PHP_EXTENSIONS \
+    && docker-php-ext-install intl \
+    && docker-php-ext-configure gd --with-freetype=/usr/include/ --with-jpeg=/usr/include/ \
+    && docker-php-ext-install -j$(nproc) gd \
+    && apk add --no-cache libzip-dev zlib-dev libpq \
+    && apk add --no-cache libjpeg libpng freetype-dev libjpeg-turbo-dev libpng-dev \
+    && rm -rf /var/cache/apk/*
+
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php \
+    && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /usr/local/bin/composer
+
+# RUN curl -fsSL "https://deb.nodesource.com/setup_${NODE_VERSION}.x" | bash - \
+#     && apk add --no-cache nodejs npm \
+#     && npm install npm@latest -g \
+#     && npm install yarn -g
+
+WORKDIR $ROOT_DIRECTORY
+
+COPY . $ROOT_DIRECTORY
+
+RUN chmod +x ./start.sh && ./start.sh
+
+COPY ./docker/php/info.php $ROOT_DIRECTORY/public/info.php
+COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+RUN sed -i "s|root /var/www/public;|root ${ROOT_DIRECTORY}/public;|g" /etc/nginx/conf.d/default.conf
+
+# Configure SSH & USER
+#RUN mkdir /var/run/sshd \
+#    && sed -i 's/#Port 22/Port 2222/' /etc/ssh/sshd_config \
+#    && sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config \
+#    && echo 'root:123123' | chpasswd \
+#    && adduser -D -s /bin/bash adminz \
+#    && echo "adminz:123123" | chpasswd
+
+COPY ./docker/supervisor.conf /etc/supervisor/conf.d/supervisor.conf
+
+RUN chown -R $ROOT_USER_GROUP $ROOT_DIRECTORY
+
+RUN printenv
+
+EXPOSE 80 443 2222
+
+CMD ["/usr/bin/supervisord", "-n"]
+
+HEALTHCHECK CMD curl --fail http://localhost:9000 || exit 1
