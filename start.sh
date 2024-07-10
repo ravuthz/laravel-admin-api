@@ -16,7 +16,7 @@ export LOG_CHANNEL=syslog
 export CACHE_STORE=file
 export DB_CONNECTION=sqlite
 
-printenv
+#printenv
 
 composer install --no-dev --quiet --no-progress --no-suggest --no-interaction --optimize-autoloader
 
