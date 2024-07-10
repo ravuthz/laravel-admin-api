@@ -14,7 +14,7 @@ export LOG_STACK=daily
 export LOG_CHANNEL=syslog
 
 export CACHE_STORE=file
-export DB_CONNECTION=pgsql
+export DB_CONNECTION=sqlite
 
 printenv
 
